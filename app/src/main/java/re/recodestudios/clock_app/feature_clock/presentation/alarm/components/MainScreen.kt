@@ -12,6 +12,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -23,12 +25,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import re.recodestudios.clock_app.feature_clock.presentation.add_edit_alarm.components.AddAlarmViewModel
 import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
-    viewModel: AlarmsViewModel = hiltViewModel()
+    addViewModel: AddAlarmViewModel = hiltViewModel()
 ) {
     val verticalScroll = rememberScrollState()
 
@@ -36,6 +40,23 @@ fun MainScreen(
     var minute by remember { mutableStateOf("0") }
     var second by remember { mutableStateOf("0") }
     var amOrPm by remember { mutableStateOf("0") }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(key1 = true) {
+        addViewModel.eventFlow.collectLatest { event ->
+            when(event) {
+                is AddAlarmViewModel.UiEvent.SaveAlarm -> {
+
+                }
+                is AddAlarmViewModel.UiEvent.ShowSnackbar -> {
+                    snackbarHostState.showSnackbar(
+                        message = event.message
+                    )
+                }
+            }
+        }
+    }
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -62,6 +83,9 @@ fun MainScreen(
             CenterAlignedTopAppBar(
                 title = {  HeaderComponent() }
             )
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
         }
     ) {
         Box(modifier = Modifier
